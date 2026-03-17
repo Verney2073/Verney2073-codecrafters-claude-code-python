@@ -51,9 +51,7 @@ def main():
 
     if tool_calls := chat.choices[0].message.tool_calls:
         response_args = tool_calls[0].function.arguments
-        print("file arggs", response_args)
         jsonified = json.loads(response_args)
-        print("jsonified", jsonified)
         opened_file = open(jsonified["file_path"], "r")
         print(opened_file.read())
     else: 
