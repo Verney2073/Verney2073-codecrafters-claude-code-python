@@ -51,7 +51,7 @@ def main():
     # TODO: Uncomment the following line to pass the first stage
     print(chat.choices[0].message.content)
 
-    response_args = chat.choices[0].message.tool_calls[0].arguments
+    response_args = chat.choices[0].message.tool_calls[0]
     print("file arggs", response_args)
 
 
