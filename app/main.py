@@ -49,13 +49,18 @@ def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!", file=sys.stderr)
 
-    # TODO: Uncomment the following line to pass the first stage
-    print(chat.choices[0].message.content)
+    if tool_calls := chat.choices[0].message.tool_calls:
+        response_args = tool_calls[0].function.arguments
+        print("file arggs", response_args)
+        jsonified = json.loads(response_args)
+        print("jsonified", jsonified)
+        opened_file = open(jsonified["file_path"], "r")
+        print(opened_file.read())
+    else: 
+        # TODO: Uncomment the following line to pass the first stage
+        print(chat.choices[0].message.content)
 
-    response_args = chat.choices[0].message.tool_calls[0].function.arguments
-    print("file arggs", response_args)
-    jsonified = json.loads(response_args)
-    print("jsonified", jsonified)
+
 
 
 if __name__ == "__main__":
