@@ -50,10 +50,13 @@ def main():
     print("Logs from your program will appear here!", file=sys.stderr)
 
     if tool_calls := chat.choices[0].message.tool_calls:
-        response_args = tool_calls[0].function.arguments
-        jsonified = json.loads(response_args)
-        opened_file = open(jsonified["file_path"], "r")
-        print(opened_file.read())
+        try: 
+            response_args = tool_calls[0].function.arguments
+            jsonified = json.loads(response_args)
+            opened_file = open(jsonified["file_path"], "r")
+            print(opened_file.read())
+        except Exception as e:
+            print(f"Error reading file: {e}", file=sys.stderr)
     else: 
         # TODO: Uncomment the following line to pass the first stage
         print(chat.choices[0].message.content)
