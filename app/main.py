@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 import sys
 
@@ -51,8 +52,10 @@ def main():
     # TODO: Uncomment the following line to pass the first stage
     print(chat.choices[0].message.content)
 
-    response_args = chat.choices[0].message.tool_calls[0]
+    response_args = chat.choices[0].message.tool_calls[0].function.arguments
     print("file arggs", response_args)
+    jsonified = json.loads(response_args)
+    print("jsonified", jsonified)
 
 
 if __name__ == "__main__":
