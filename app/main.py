@@ -44,7 +44,28 @@ def main():
                             "required": ["file_path"],
                         },
                     },
-                }
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "Write",
+                        "description": "Write content to a file",
+                        "parameters": {
+                            "type": "object",
+                            "required": ["file_path", "content"],
+                            "properties": {
+                                "file_path": {
+                                    "type": "string",
+                                    "description": "The path of the file to write to",
+                                },
+                                "content": {
+                                    "type": "string",
+                                    "description": "The content to write to the file",
+                                },
+                            },
+                        },
+                    },
+                },
             ],
         )
 
@@ -67,16 +88,38 @@ def main():
         )
 
         if tool_calls and len(tool_calls) > 0:
-            try:
-                for tool in tool_calls:
-                    if tool.function.name == "Read":
+            for tool in tool_calls:
+                if tool.function.name == "Read":
+                    try:
                         args = json.loads(tool.function.arguments)
                         file_path = args["file_path"]
                         with open(file_path, "r") as f:
                             content = f.read()
-                            messages.append({"role": "tool", "tool_call_id": tool.id, "content": content})
-            except Exception as e:
-                print(f"Error reading file: {e}", file=sys.stderr)
+                            messages.append(
+                                {
+                                    "role": "tool",
+                                    "tool_call_id": tool.id,
+                                    "content": content,
+                                }
+                            )
+                    except Exception as e:
+                        print(f"Error reading file: {e}", file=sys.stderr)
+                elif tool.function.name == "Write":
+                    try:
+                        args = json.loads(tool.function.arguments)
+                        file_path = args["file_path"]
+                        content = args["content"]
+                        with open(file_path, "w") as f:
+                            f.write(content)
+                            messages.append(
+                                {
+                                    "role": "tool",
+                                    "tool_call_id": tool.id,
+                                    "content": content,
+                                }
+                            )
+                    except Exception as e:
+                        print(f"Error writing file: {e}", file=sys.stderr)
         else:
             # TODO: Uncomment the following line to pass the first stage
             print(chat_message.content)
