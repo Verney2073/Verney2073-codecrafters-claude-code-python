@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import subprocess
 import sys
 
 from openai import OpenAI
@@ -66,6 +67,23 @@ def main():
                         },
                     },
                 },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "Bash",
+                        "description": "Execute a shell command",
+                        "parameters": {
+                            "type": "object",
+                            "required": ["command"],
+                            "properties": {
+                                "command": {
+                                    "type": "string",
+                                    "description": "The command to execute",
+                                }
+                            },
+                        },
+                    },
+                },
             ],
         )
 
@@ -120,6 +138,33 @@ def main():
                             )
                     except Exception as e:
                         print(f"Error writing file: {e}", file=sys.stderr)
+                elif tool.function.name == "Bash":
+                    try:
+                        args = json.loads(tool.function.arguments)
+                        command = args["command"]
+                        completed = subprocess.run(
+                            command,
+                            shell=True,
+                            capture_output=True,
+                            text=True,
+                            check=False,
+                        )
+                        messages.append(
+                            {
+                                "role": "tool",
+                                "tool_call_id": tool.id,
+                                "content": completed.stdout,
+                            }
+                        )
+                    except Exception as e:
+                        messages.append(
+                            {
+                                "role": "tool",
+                                "tool_call_id": tool.id,
+                                "content": completed.stderr,
+                            }
+                        )
+                        print(f"Error executing command: {e}", file=sys.stderr)
         else:
             # TODO: Uncomment the following line to pass the first stage
             print(chat_message.content)
