@@ -1,5 +1,4 @@
 import argparse
-import json
 import os
 import sys
 
@@ -19,9 +18,11 @@ def main():
 
     client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
 
+    messages = [{"role": "user", "content": args.p}]
+
     chat = client.chat.completions.create(
         model="anthropic/claude-haiku-4.5",
-        messages=[{"role": "user", "content": args.p}],
+        messages=messages,
         tools=[
             {
                 "type": "function",
@@ -50,18 +51,40 @@ def main():
     print("Logs from your program will appear here!", file=sys.stderr)
 
     if tool_calls := chat.choices[0].message.tool_calls:
-        try: 
-            response_args = tool_calls[0].function.arguments
-            jsonified = json.loads(response_args)
-            opened_file = open(jsonified["file_path"], "r")
-            print(opened_file.read())
+        try:
+            for tool in tool_calls:
+                response = tool.function.arguments
+                messages.append(
+                    {"role": "tool", "tool_call_id": tool.id, "content": response}
+                )
+                client.chat.completions.create(
+                    model="anthropic/claude-haiku-4.5",
+                    messages=messages,
+                    tools=[
+                        {
+                            "type": "function",
+                            "function": {
+                                "name": "Read",
+                                "description": "Read and return the contents of a file",
+                                "parameters": {
+                                    "type": "object",
+                                    "properties": {
+                                        "file_path": {
+                                            "type": "string",
+                                            "description": "The path to the file to read",
+                                        }
+                                    },
+                                    "required": ["file_path"],
+                                },
+                            },
+                        }
+                    ],
+                )
         except Exception as e:
             print(f"Error reading file: {e}", file=sys.stderr)
-    else: 
+    else:
         # TODO: Uncomment the following line to pass the first stage
         print(chat.choices[0].message.content)
-
-
 
 
 if __name__ == "__main__":
